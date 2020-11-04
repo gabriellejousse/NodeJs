@@ -1,2 +1,21 @@
-<h1> {{title}} </h1>
+<link rel="stylesheet" href="/css/bootstrap.min.css" />
 
+
+
+<div class="container">
+
+        <h3> {{title}} </h3>
+
+
+        <form method="post" action="/students/add">
+            <input name="username" placeholder="Type your name here" type="text" />
+            <button type="submit" class="btn btn-sm btn-primary">Send</button>
+        </form>
+
+<h3> {{titleList}}</h3>
+        <ul>
+            {{#each students}}
+            <li>{{this}}</li>
+            {{/each}}
+        </ul>
+</div>

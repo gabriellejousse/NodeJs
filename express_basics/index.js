@@ -1,7 +1,7 @@
 const express = require('express');
 const app = express();
 
-const port = 3001;
+const port = 3003;
 
 
 const arrAuthors = ['Lawrence Nowell', 'William Shakespeare', 'Charles Dickens', 'Oscar Wilde']
@@ -108,9 +108,12 @@ app.get('/json/authors/:id/', (req, res) => {
 
 app.get('/authors/:id/', function (req, res, next) {
     //si l'id de l'url est > 4, renvoyer un message d'erreur avec le nom de l'id problématique:
-    if (req.params.id > 4) {
-        res.send(`error ID ${req.params.id}`)
-        console.log(`coucou error ${req.params.id}`);
+    const id= req.params.id
+    if (id > authorsObj.length) {
+        res.send(`error ID ${id}`)
+        console.log(`error ID ${id}`)
+    } else {
+        res.send(authorsObj[id - 1]);
     }
 });
 
