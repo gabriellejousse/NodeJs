@@ -1,0 +1,20 @@
+
+
+<h1> {{title}} </h1>
+
+{{!-- <form  enctype='multipart/form-data' action='/upload' method='post'>
+    <label> Type your username here : </label>
+    <input name="username" placeholder="username"/>
+    <button type="submit">Send</button>
+    <img src="../public/img/emoji-1.jpg" alt="emoji-1"/>
+</form> --}}
+
+<form method="post" enctype='multipart/form-data' action='/upload'>
+
+     <h1>   Type your username here
+        &#128151;</h1>
+
+    <input name="username" placeholder="username"/>
+    <input type="file" name='image' />
+    <button type="submit">Submit</button>
+</form>
