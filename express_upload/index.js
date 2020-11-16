@@ -2,16 +2,20 @@ const express = require('express');
 const exphbrs = require('express-handlebars');
 const mongoose = require('mongoose');
 const multer = require('multer');
-const upload = multer({ dest: 'public/' });
+//const upload = multer({ dest: 'public/uploads/' });
 const app = express();
 const port = 3001;
 
-let userArray=[];
-let imgArray=[];
+//let userArray=[];
+//let imgArray=[];
+
+
 
 app.engine('handlebars', exphbrs());
 
 app.set('view engine', 'handlebars')
+
+
 
 /* Mongoose :  */
 
@@ -20,9 +24,23 @@ mongoose.connect('mongodb://localhost:27017/upload', {
     useUnifiedTopology: true
 }).catch(err => console.log(err))
 
+var storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, 'public/uploads')
+    },
+    filename: function(req, file, cb) {
+        console.log('file multer diskstorage', file);
+        cb(null, file.originalname)
+        let ext = file.originalname.substring(file.originalname.lastIndexOf('.'), file.originalname.length);
+        cb(null, Date.now() + ext)
+    }
+})
+
+var upload = multer({ storage: storage})
+
 const User = new mongoose.Schema({
     username: {
-        type: [String],
+        type: String,
         index: true
     },
     firstname: String,
@@ -30,31 +48,8 @@ const User = new mongoose.Schema({
     profilePicture: String
 })
 
-const userSchema = mongoose.model('User', User)
 
-/* const user1= new userSchema({
-    username: 'gabjou',
-    firstname: 'gabrielle',
-    surname: 'jousse',
-    profilePicture: './public/img/emoji-1.jpg'
-})
-user1.save().then(res => console.log(res))
-
-const user2= new userSchema({
-    username: 'yac93',
-    firstname: 'yacine',
-    surname: 'ames',
-    profilePicture: './public/img/emoji-2.jpg'
-})
-user2.save().then(res => console.log(res))
-
-const user3= new userSchema({
-    username: 'veganchampi',
-    firstname: 'marc',
-    surname: 'sirisak',
-    profilePicture: './public/img/emoji-3.jpg'
-})
-user3.save().then(res => console.log(res)) */
+const UserSchema = mongoose.model('User', User)
 
 
 
@@ -64,6 +59,7 @@ app.get('/', (req, res) => {
     })
 })
 
+
 // parse application/x-www-form-urlencoded
 app.use(express.urlencoded({ extended: true }));
 // parse application/json
@@ -71,26 +67,86 @@ app.use(express.json());
 
 
 
-
-app.post('/upload', upload.single('image'), (req, res, next) => {
+app.post('/upload', upload.single('image'), async (req, res, next) => {
     let usernamevar = req.body.username
-    //let imageUp = req.file.image
-    //on met les username entrés dans le input dans l'array vide userArray
-    userArray.push(usernamevar)
-    //imgArray.push(imageUp)
-    
+    //let imageUp = req.file //changé avec leandro
+
     console.log("username:", usernamevar)
-    console.log(userArray)
+    //console.log(userArray)
+    //console.log('id image : ', imageUp)
+
+    const user_1 = await new UserSchema ({
+        username: usernamevar,
+        profilePicture: req.file.filename //changé avec leandro
+    })
+    user_1.save().then(res => console.log(res))
+
+    console.log("user_1 :", user_1)
 
     res.render("add1user", {
         username: usernamevar,
-        //image: imageUp
+        id: user_1._id
+        // image: imageUp.originalname
     })
+
 })
 
+/* app.get('/users/:id', (req, res, next) => {
+    res.send(
+        ${req.params.id}
+    )
+}) */
 
 
 
+// app.get('/users/:id', async (req, res, next) => {
+//      let idUser = "5fae7b7ec1e6fe8549f7574c"
+//     //let idUser = req.params.id
+//     /*     const result = UserSchema.findById(`${idUser}`, function (err, res) {
+//             console.log(res.toObject())
+//         }) */
+//     const user = await UserSchema.findById(idUser)
+//     console.log("user:", user)
+//     console.log("username:", user.username)
+//     console.log("image:", user.profilePicture)
+
+//     /*     res.render("userpage", {
+//             user: idUser.username,
+//             image: idUser.profilePicture
+//         }
+//     ) */
+//     res.render("userpage", {
+//         user: user.username,
+//         image: user.profilePicture
+//     } )
+// })
+
+
+
+app.get('/users/:id/', (req, res) => {
+
+    //let iduser = "5faeacca36c9b48d025e69b7"
+    let iduser = req.params.id
+
+    let result = UserSchema.findById(iduser, function (err, result) {
+        console.log('result - findById', result)
+
+        res.render('userpage', {
+            username: result.username,
+            profilePicture: result.profilePicture
+        })
+    })
+});
+
+
+/* app.post('/users/:id', upload.single('image'), (req, res, next) => {
+    let idUser = req.params.id
+    res.render("userpage", {
+        user: result.username,
+        image: result.profilePicture
+    })
+
+}) */
 
 
 //pour accéder à l'image depuis le localhost : taper dans le nav localhost:3001/img/image.png :
