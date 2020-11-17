@@ -99,28 +99,6 @@ app.post('/upload', upload.single('image'), async (req, res, next) => {
 
 
 
-// app.get('/users/:id', async (req, res, next) => {
-//      let idUser = "5fae7b7ec1e6fe8549f7574c"
-//     //let idUser = req.params.id
-//     /*     const result = UserSchema.findById(`${idUser}`, function (err, res) {
-//             console.log(res.toObject())
-//         }) */
-//     const user = await UserSchema.findById(idUser)
-//     console.log("user:", user)
-//     console.log("username:", user.username)
-//     console.log("image:", user.profilePicture)
-
-//     /*     res.render("userpage", {
-//             user: idUser.username,
-//             image: idUser.profilePicture
-//         }
-//     ) */
-//     res.render("userpage", {
-//         user: user.username,
-//         image: user.profilePicture
-//     } )
-// })
-
 
 
 app.get('/users/:id/', (req, res) => {
