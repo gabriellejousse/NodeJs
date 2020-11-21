@@ -9,10 +9,10 @@ const UserSchema = new mongoose.Schema({
     minlength: 8,
     //$regex: /^(?=.*[A-Z])(?=.*[0-9]).*$/
   },
-  passwordConfirm: {
-    type: String,
-    minlength: 8
-  },
+  // passwordConfirm: {
+  //   type: String,
+  //   minlength: 8
+  // },
   firstName: String,
   surname: String,
   birthDate: Date
