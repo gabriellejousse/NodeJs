@@ -1,5 +1,17 @@
+<nav class="container">
+    <div class="col-12">
+        {{#if isUserLogged }}
+        {{> navbarLogged }}
+        {{else}}
+        {{> navbarUnlogged }}
+        {{/if}}
+    </div>
+</nav>
 
+<div class="container">
+    <div class="col-12"> 
+        <p>Hello {{firstName}} {{surname}}, you're connected </p>
 
-<p>This page is protected</p>
-<a href="/logout">Logout</a>
-<h1> User : {{username}}</h1>
+{{!--         <h1> User : {{username}}</h1>
+ --}}    </div>
+</div>

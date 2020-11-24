@@ -1,31 +1,30 @@
-<nav style="background-color: pink">
-
-    <h3 style='color: white '>
-        <a href="/signup"> Signup </a>
-    </h3>
-
-    <h3 style='color: white'>
-        <a href="/login">Login </a>
-    </h3>
-
+<nav class="container">
+    <div class="col-12">
+        {{#if isUserLogged }}
+        {{> navbarLogged }}
+        {{else}}
+        {{> navbarUnlogged }}
+        {{/if}}
+    </div>
 </nav>
 
-</br>
+<div class="container">
+    <ul class="col-12
+    ">
+        <li>
+            <a href='/paris'> Paris </a>
+        </li>
 
-<ul>
-    <li>
-        <a href='/paris'> Paris </a>
-    </li>
+        </br>
 
-    </br>
+        <li>
+            <a href='/lyon'> Lyon </a>
+        </li>
 
-    <li>
-        <a href='/lyon'> Lyon </a>
-    </li>
+        </br>
 
-    </br>
-
-    <li>
-        <a href='/marseille'> Marseille </a>
-    </li>
-</ul>>
+        <li>
+            <a href='/marseille'> Marseille </a>
+        </li>
+    </ul>
+</div>

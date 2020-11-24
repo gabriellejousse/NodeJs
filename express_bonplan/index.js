@@ -9,7 +9,12 @@ const LocalStrategy = require("passport-local");
 const User = require("./models/User")
 const bodyParser = require("body-parser");
 const expressValidator = require("express-validator")
+const multer = require('multer');
+//const upload = multer({ dest: 'public/uploads/' });
+
 const port = 3002;
+var fs = require('fs');
+
 
 const validationResult = expressValidator.validationResult;
 const body = expressValidator.body;
@@ -22,50 +27,86 @@ app.use('/users', usersRoutes);
 let productsRoutes = require('./controllers/products');
 app.use('/products', productsRoutes);
 
+var storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, 'public/uploads')
+    },
+    filename: function (req, file, cb) {
+        console.log('file multer diskstorage', file);
+        cb(null, file.originalname)
+        let ext = file.originalname.substring(file.originalname.lastIndexOf('.'), file.originalname.length);
+        cb(null, Date.now() + ext)
+    }
+})
+
+//var upload = multer({ storage: storage})
+
+app.use(express.static('public'));
+
+app.get('/admin', (req, res, next) => {
+    res.render('admin')
+})
 
 mongoose.connect(
     "mongodb://localhost:27017/bonPlan",
-  {
-    useNewUrlParser: true,
-    useCreateIndex: true,
-    useUnifiedTopology: true
-  }
+    {
+        useNewUrlParser: true,
+        useCreateIndex: true,
+        useUnifiedTopology: true
+    }
 );
 
 
 // Express configuration
+app.engine("handlebars", exphbs({
+    layoutsDir: __dirname + '/views/layouts/',
+    partialsDir: __dirname + '/views/partials/'
+}));
 
-app.engine("handlebars", exphbs());
+// exphbs.registerPartial('navbarLogged', fs.readFileSync(__dirname + '/views/partials/navbarLogged', 'utf8'));
+// exphbs.registerPartials(__dirname + '/views/partials');
+
 app.set("view engine", "handlebars");
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
+
 // enable session management
+// paramétrer la session / cookie, 
+
 app.use(
     expressSession({
-      secret: "konexioasso07",
-      resave: false,
-      saveUninitialized: false,
-      store: new MongoStore({ mongooseConnection: mongoose.connection })
+        secret: "konexioasso07",
+        resave: false,
+        saveUninitialized: false,
+        store: new MongoStore({ mongooseConnection: mongoose.connection })
     })
-  );
+);
 
 
-
+// l'ordre est important, ces 2 app.use doivent etre après l'app.use expressSession ci-dessus
 // enable Passport
 app.use(passport.initialize());
 app.use(passport.session());
 
 // Passport configuration
-// passport.use(new LocalStrategy(User.authenticate()));
-passport.serializeUser(User.serializeUser()); // Save the user.id to the session
-passport.deserializeUser(User.deserializeUser()); // Receive the user.id from the session and fetch the User from the DB by its ID
+/* passport.use(new LocalStrategy({
+    usernameField: "username",
+    passwordField: "password",
+}, User.authenticate())); */
+
+passport.serializeUser((user, done) => {
+    return done(null, user._id)
+}); // Save the user.id to the session
+passport.deserializeUser(async (_id, done) => {
+    const user = await User.findById(_id).lean().exec();
+    return done(null, user)
+}); // Receive the user.id from the session and fetch the User from the DB by its ID
 
 
 passport.use(
     new LocalStrategy(
-        // User.authenticate()))
         {
             usernameField: "username",
             passwordField: "password",
@@ -91,26 +132,21 @@ passport.use(
 
 
 app.get('/', (req, res) => {
-    res.render('home')
+    console.log("username dans home", req.user)
+    console.log("isauthenticated", req.isAuthenticated());
+
+
+        res.render('home', {
+            isUserLogged: req.isAuthenticated(),
+            username: req.user ? req.user.username : null
+        });
+
+
+
 })
 
-app.get("/profile", (req, res) => {
-    console.log("GET /profile");
-    if (req.isAuthenticated()) {
-        console.log(req.user);
-        res.render("profile" , {
-            username: req.user.username
-        });
-    } else {
-        res.redirect("/");
-    }
-});
 
 
-/* 
-app.get('/signup', (req, res) => {
-    res.render('signup')
-}) */
 
 app.get("/signup", async (req, res) => {
 
@@ -139,11 +175,22 @@ app.post("/signup", (req, res, next) => {
     })
 }, passport.authenticate("local"), (req, res) => res.redirect("/profile"))
 
-/* app.get("/profile", async (req,res) => {
-    res.render('profile')
 
-})
- */
+app.get("/profile", (req, res) => {
+    console.log("GET /profile");
+    if (req.isAuthenticated()) {
+        console.log(req.user);
+        res.render("profile", {
+            username: req.user.username,
+            surname: req.user.surname,
+            firstName: req.user.firstName,
+            isUserLogged: req.isAuthenticated()
+
+        }); console.log("firstName dans profile", req.user.firstName)
+    } else {
+        res.redirect("/");
+    }
+});
 
 /* 
 app.post('/profile',
@@ -167,16 +214,13 @@ app.post('/profile',
 
 
 
-app.get('/login', async  (req, res) => {
-    res.render('login')
-})
 
 
 app.get("/login", (req, res) => {
     // console.log('req.isAuthenticated',req.isAuthenticated);
 
     if (req.isAuthenticated()) {
-        res.redirect("/");
+        res.redirect("/profile");
     } else {
         res.render("login");
     }
@@ -200,6 +244,8 @@ app.get("/logout", (req, res) => {
     // console.log("GET /logout", req);
     req.logout();
     res.redirect("/");
+
+
 });
 
 
@@ -207,5 +253,4 @@ app.get("/logout", (req, res) => {
 
 app.listen(port, () => {
     console.log(`Server started on port: ${port}`);
-  });
-  
+});
