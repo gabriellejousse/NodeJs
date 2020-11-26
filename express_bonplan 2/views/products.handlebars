@@ -1,0 +1,23 @@
+<nav class="container">
+  <div class="col-12">
+    {{#if isUserLogged }}
+    {{> navbarLogged }}
+    {{else}}
+    {{> navbarUnlogged }}
+    {{/if}}
+  </div>
+</nav>
+
+<div class="container">
+  <div action="/products" method="POST" class="card" style="width: 18rem;" enctype='multipart/form-data'>
+    <img class="card-img-top" type="file" name="productPicture" src="/upload/{{productPicture}}" alt="Card image cap">
+    <div class="card-body">
+
+      <h5 class="card-title" name="productName">Product : {{productName}} </h5>
+      <p class="card-text" name="tagProduct"> Tag Product : {{tagProduct}}</p>
+      <p class="card-text" name="productPrice"> Price : {{productPrice}} </p>
+
+
+    </div>
+  </div>
+</div>

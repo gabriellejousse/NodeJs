@@ -14,14 +14,23 @@ const multer = require('multer');
 //const upload = multer({ dest: 'public/uploads/' });
 var fs = require('fs');
 
-const port = 3002;
-
-
+const port = 3001;
 
 const validationResult = expressValidator.validationResult;
 const body = expressValidator.body;
 
 const app = express();
+
+mongoose.connect(
+    "mongodb://localhost:27017/bonPlanMarc",
+    {
+        useNewUrlParser: true,
+        useCreateIndex: true,
+        useUnifiedTopology: true
+    }
+);
+
+
 
 let usersRoutes = require('./controllers/users');
 app.use('/users', usersRoutes);
@@ -35,80 +44,27 @@ let storage = multer.diskStorage({
     },
     filename: function (req, file, cb) {
         let ext = file.originalname.substring(
-          file.originalname.lastIndexOf("."),
-          file.originalname.length
+            file.originalname.lastIndexOf("."),
+            file.originalname.length
         );
         cb(null, Date.now() + ext);
     },
 });
+
 let upload = multer({ storage: storage });
-//var upload = multer({ storage: storage})
+
+
 
 app.use(express.static('public'));
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
 
-app.get('/admin', (req, res, next) => {
-    res.render('admin')
-})
-
-mongoose.connect(
-    "mongodb://localhost:27017/bonPlan",
-    {
-        useNewUrlParser: true,
-        useCreateIndex: true,
-        useUnifiedTopology: true
-    }
-);
-
-/* app.post('/upload', upload.single('image'), (req, res) => {
-    console.log("req.file", req.file);
-}); */
-
-/* app.post(
-    "/signup", upload.single("image"), async (req, res, next) => {
-    console.log('req.body', req.body);
-    const { username, surname, password, firstName } = req.body
-    User.register(
-        new User({
-            username,
-            surname,
-            password,
-            firstName,
-            profilePicture: req.file.filename,
-        }),
-        password, // password will be hashed
-        (err, user) => {
-            if (err) {
-                console.log("/signup user register err", err);
-                return res.render("signup");
-            } else {
-                passport.authenticate("local")(req, res, () => {
-                    res.redirect("/profile");
-                });
-            }
-        }
-    );
-});
- */
-
-
-
-// Express configuration
 app.engine("handlebars", exphbs({
     layoutsDir: __dirname + '/views/layouts/',
     partialsDir: __dirname + '/views/partials/'
 }));
-
-// exphbs.registerPartial('navbarLogged', fs.readFileSync(__dirname + '/views/partials/navbarLogged', 'utf8'));
-// exphbs.registerPartials(__dirname + '/views/partials');
-
 app.set("view engine", "handlebars");
 
-app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
-
-
-// enable session management
-// paramétrer la session / cookie, 
 
 app.use(
     expressSession({
@@ -118,6 +74,7 @@ app.use(
         store: new MongoStore({ mongooseConnection: mongoose.connection })
     })
 );
+
 
 
 // l'ordre est important, ces 2 app.use doivent etre après l'app.use expressSession ci-dessus
@@ -130,6 +87,8 @@ app.use(passport.session());
     usernameField: "username",
     passwordField: "password",
 }, User.authenticate())); */
+
+
 
 passport.serializeUser((user, done) => {
     return done(null, user._id)
@@ -177,11 +136,32 @@ app.get('/', (req, res) => {
         isUserLogged: req.isAuthenticated(),
         username: req.user ? req.user.username : null,
         profilePicture: req.user ? req.user.profilePicture : null
-
     });
 })
 
 
+app.post('/upload', upload.single('image'), (req, res) => {
+    console.log("req.file", req.file);
+});
+
+
+
+app.get("/profile", (req, res) => {
+
+    if (req.isAuthenticated()) {
+        console.log(req.user);
+        res.render("profile", {
+            username: req.user.username,
+            surname: req.user.surname,
+            firstName: req.user.firstName,
+            isUserLogged: req.isAuthenticated(),
+            profilePicture: req.user.profilePicture
+
+        }); console.log("firstName dans profile", req.user.firstName)
+    } else {
+        res.redirect("/");
+    }
+});
 
 
 app.get("/signup", async (req, res) => {
@@ -196,14 +176,14 @@ app.get("/signup", async (req, res) => {
 //enregistre les valeurs qu'on rentre dans les inputs du signup:
 
 app.post("/signup", upload.single("image"), async (req, res, next) => {
-    const { username, password, firstName, surname} = req.body;
+    const { username, password, firstName, surname } = req.body;
     console.log("req.body signup", req.body)
     User.create({
         username,
         password,
         firstName,
         surname,
-        profilePicture:req.file.filename
+        profilePicture: req.file.filename
     }, (err, user) => {
         if (err) {
             return res.status(500).send(err)
@@ -211,45 +191,6 @@ app.post("/signup", upload.single("image"), async (req, res, next) => {
         next()
     })
 }, passport.authenticate("local"), (req, res) => res.redirect("/profile"))
-
-
-app.get("/profile", (req, res) => {
-    
-    if (req.isAuthenticated()) {
-        console.log(req.user);
-        res.render("profile", {
-            username: req.user.username,
-            surname: req.user.surname,
-            firstName: req.user.firstName,
-            isUserLogged: req.isAuthenticated(),
-            profilePicture:req.user.profilePicture
-
-        }); console.log("firstName dans profile", req.user.firstName)
-    } else {
-        res.redirect("/");
-    }
-});
-
-/* 
-app.post('/profile',
-    body("username").isEmail(),
-    body("password").isLength({ min: 1 }), 
-    async (req, res) => {
-        const errors = validationResult(req);
-        if (errors.isEmpty() === false) {
-            res.json({
-                errors: errors.array() // to be used in a json loop
-            });
-            return;
-        } else {
-            res.json({
-                success: true,
-                message: 'User will be saved'
-            });
-        }
-    }
-);  */
-
 
 
 
@@ -265,6 +206,8 @@ app.get("/login", (req, res) => {
 });
 
 
+
+
 app.post(
     "/login",
     // console.log('APPPOST', passport.authenticate),
@@ -275,6 +218,79 @@ app.post(
         console.log('un message');
     }
 );
+
+
+
+
+app.get('/admin', (req, res, next) => {
+
+    if (req.isAuthenticated()) {
+        res.render("admin", {
+            isUserLogged: req.isAuthenticated(),
+            username: req.user ? req.user.username : null,
+            profilePicture: req.user ? req.user.profilePicture : null
+        });
+    } else {
+        res.redirect("/");
+    }
+})
+
+
+app.post("/admin", upload.single("productPicture"), async (req, res, next) => {
+    console.log('req.body', req.body);
+    const { productName, productPrice, tagProduct } = req.body;
+    try {
+        await Product.create(
+            new Product({
+                productName,
+                productPrice,
+                productPicture: req.file.filename,
+                tagProduct,
+            }));
+
+        res.redirect("/products");
+    } catch (error) {
+        console.log('error', error);
+        res.status(500).json(error)
+    }
+});
+
+
+
+app.get("/products", (req, res) => {
+    const { productName, tagProduct, productPrice, } = req.body;
+    console.log("GET /products");
+    if (req.isAuthenticated()) {
+        console.log(req.user);
+        res.render("products", {
+            isUserLogged: req.isAuthenticated(),
+            username: req.user ? req.user.username : null,
+            profilePicture: req.user.profilePicture,
+            productName,
+            productPrice,
+            tagProduct,
+            productPicture: req.file.filename,
+
+        });
+    } else {
+        res.redirect("/");
+    }
+});
+
+
+
+app.post('/products', (req, res) => {
+    console.log('req du body', req.body)
+    const { productName, tagProduct, productPrice, } = req.body;
+    res.render('products', {
+        productName,
+        productPrice,
+        productPicture: req.file.filename,
+        tagProduct,
+    })
+});
+
+
 
 
 

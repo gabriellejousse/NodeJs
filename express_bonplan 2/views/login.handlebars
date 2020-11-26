@@ -1,0 +1,17 @@
+<nav class="container">
+    <div class="col-12">
+        {{#if isUserLogged }}
+        {{> navbarLogged }}
+        {{else}}
+        {{> navbarUnlogged }}
+        {{/if}}
+    </div>
+</nav>
+
+<div class="container">
+    <form action="/login" method="POST" class="col-12">
+        <input type="text" placeholder="username" name="username" />
+        <input type="password" placeholder="Password" name="password" />
+        <button type="submit">Submit</button>
+    </form>
+</div>
