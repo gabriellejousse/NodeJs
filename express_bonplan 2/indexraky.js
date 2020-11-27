@@ -173,7 +173,7 @@ app.get("/admin", (req, res) => {
 ​
 app.post("/admin", upload.single("productPicture"), async (req, res, next) => {
     console.log('req.file', req.file);
-    console.log( 'req.body /admin',req.body)
+    console.log( 'req.body /admin', req.body)
     const { productName, tag, price } = req.body;
 ​
     try {

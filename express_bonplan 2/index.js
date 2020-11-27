@@ -14,6 +14,11 @@ const multer = require('multer');
 //const upload = multer({ dest: 'public/uploads/' });
 var fs = require('fs');
 
+// .env déploiement
+require('dotenv').config();
+const { PORT, MONGODB_URI, API_KEY } = process.env;
+
+
 const port = 3001;
 
 const validationResult = expressValidator.validationResult;
