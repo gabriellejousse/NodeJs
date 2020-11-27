@@ -19,7 +19,7 @@ require('dotenv').config();
 const { PORT, MONGODB_URI, API_KEY } = process.env;
 
 
-const port = 3001;
+const port = process.env.PORT || 3000;
 
 const validationResult = expressValidator.validationResult;
 const body = expressValidator.body;
